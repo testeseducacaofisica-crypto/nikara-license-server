@@ -1,6 +1,15 @@
 exports.handler = async (event) => {
+  const headers = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS"
+  };
 
-  const { user, password } = JSON.parse(event.body);
+  if (event.httpMethod === "OPTIONS") {
+    return { statusCode: 200, headers, body: "" };
+  }
+
+  const { user, password } = JSON.parse(event.body || "{}");
 
   const licencas = [
     {
@@ -15,26 +24,22 @@ exports.handler = async (event) => {
     x => x.user === user && x.password === password
   );
 
-  if (licenca) {
-
+  if (!licenca) {
     return {
-      statusCode: 200,
-      body: JSON.stringify({
-        ok: true,
-        user: licenca.user,
-        licenseName: licenca.licenseName,
-        expires: licenca.expires
-      })
+      statusCode: 401,
+      headers,
+      body: JSON.stringify({ ok: false, message: "Login inválido" })
     };
-
   }
 
   return {
-    statusCode: 401,
+    statusCode: 200,
+    headers,
     body: JSON.stringify({
-      ok: false,
-      message: "Login inválido"
+      ok: true,
+      user: licenca.user,
+      licenseName: licenca.licenseName,
+      expires: licenca.expires
     })
   };
-
 };
